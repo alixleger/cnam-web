@@ -1,14 +1,27 @@
 <!DOCTYPE html>
 <html>
     <body>
-        <h2>Formulaire</h2>
+        <h2>
+            {{if .Person}}
+                Formulaire de modification de contact
+            {{else}}
+                Formulaire d'ajout de contact
+            {{end}}
+        </h2>
 
-        <form action="/" method="POST">
-            First name:<br><input type="text" name="firstname" value="John">
+        <form action="{{.Action}}" method="POST">
+            First name:<br><input type="text" name="firstname" value="{{if .Person}} {{.Person.Firstname}} {{end}}">
             <br>
-            Last name:<br><input type="text" name="lastname" value="Doe">
+            Last name:<br><input type="text" name="lastname" value="{{if .Person}} {{.Person.Lastname}} {{end}}">
             <br><br>
-            <div><input type="submit" value="Save"></div>
+            <div>
+                {{if .Person}}
+                    <input type="hidden" id="id" name="id" value="{{.Person.ID.Hex}}">
+                    <input type="submit" value="Modifier">
+                {{else}}
+                    <input type="submit" value="Ajouter">
+                {{end}}
+            </div>
         </form> 
     </body>
 </html>

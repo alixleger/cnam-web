@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -45,7 +46,8 @@ func (mongoClient *MongoClient) GetPersons() ([]entity.Person, error) {
 
 	defer cursor.Close(context.Background())
 
-	persons := make([]entity.Person, 0)
+	var persons []entity.Person
+
 	for cursor.Next(context.Background()) {
 		person := entity.Person{}
 		err := cursor.Decode(&person)
@@ -61,21 +63,38 @@ func (mongoClient *MongoClient) GetPersons() ([]entity.Person, error) {
 	return persons, nil
 }
 
+// GetPerson function return an entity in the collection "person" from an ID
+func (mongoClient *MongoClient) GetPerson(ID string) (entity.Person, error) {
+	person := entity.Person{}
+	objID, _ := primitive.ObjectIDFromHex(ID)
+	err := mongoClient.personCollection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&person)
+	return person, err
+}
+
 // InsertPerson function insert an entity in the collection "person"
 func (mongoClient *MongoClient) InsertPerson(person entity.Person) {
 	mongoClient.personCollection.InsertOne(context.Background(), person)
 }
 
-/*
-
-// DeletePerson function insert an entity in the collection "person"
-func (mongoClient *MongoClient) DeletePerson(person entity.Person) {
-
+// DeletePerson function insert an entity in the collection "person" from an ID
+func (mongoClient *MongoClient) DeletePerson(ID string) {
+	objID, _ := primitive.ObjectIDFromHex(ID)
+	mongoClient.personCollection.DeleteOne(context.Background(), bson.M{"_id": objID})
 }
 
 // UpdatePerson function update an entity in the collection "person"
-func (mongoClient *MongoClient) UpdatePerson(person entity.Person) {
+func (mongoClient *MongoClient) UpdatePerson(person entity.Person) error {
+	pByte, err := bson.Marshal(person)
+	if err != nil {
+		return err
+	}
 
+	var update bson.M
+	err = bson.Unmarshal(pByte, &update)
+	if err != nil {
+		return err
+	}
+
+	mongoClient.personCollection.UpdateOne(context.Background(), bson.M{"_id": person.ID}, bson.D{{Key: "$set", Value: update}})
+	return nil
 }
-
-*/
