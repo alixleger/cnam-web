@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/alixleger/cours1/entity"
@@ -19,17 +20,24 @@ const serverURI = "mongodb://localhost:27017"
 func main() {
 	formTmlp := template.Must(template.ParseFiles(filepath.Join("views", "form.html")))
 	listTmpl := template.Must(template.ParseFiles(filepath.Join("views", "list.html")))
+	var validInput = regexp.MustCompile(`^[a-zA-ZàâæçéèêëîïôœùûüÿÀÂÆÇnÉÈÊËÎÏÔŒÙÛÜŸ\-\s]+$`)
 
 	dbClient := mongodb.New(serverURI, databaseName)
 	fmt.Println("Connected to MongoDB!")
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			person := entity.Person{
-				Firstname: r.FormValue("firstname"),
-				Lastname:  r.FormValue("lastname"),
+			firstnameInput := r.FormValue("firstname")
+			lastnameInput := r.FormValue("lastname")
+
+			if validInput.MatchString(firstnameInput) && validInput.MatchString(lastnameInput) {
+				person := entity.Person{
+					Firstname: firstnameInput,
+					Lastname:  lastnameInput,
+				}
+				dbClient.InsertPerson(person)
 			}
-			dbClient.InsertPerson(person)
+
 			http.Redirect(w, r, "/", http.StatusMovedPermanently)
 		}
 
@@ -58,13 +66,18 @@ func main() {
 
 	http.HandleFunc("/person/edit", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			objID, _ := primitive.ObjectIDFromHex(r.FormValue("id"))
-			person := entity.Person{
-				ID:        objID,
-				Firstname: r.FormValue("firstname"),
-				Lastname:  r.FormValue("lastname"),
+			firstnameInput := r.FormValue("firstname")
+			lastnameInput := r.FormValue("lastname")
+			objID, err := primitive.ObjectIDFromHex(r.FormValue("id"))
+
+			if validInput.MatchString(firstnameInput) && validInput.MatchString(lastnameInput) && err == nil {
+				person := entity.Person{
+					ID:        objID,
+					Firstname: firstnameInput,
+					Lastname:  lastnameInput,
+				}
+				dbClient.UpdatePerson(person)
 			}
-			dbClient.UpdatePerson(person)
 		}
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 	})
