@@ -27,8 +27,8 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			firstnameInput := r.FormValue("firstname")
-			lastnameInput := r.FormValue("lastname")
+			firstnameInput := strings.Trim(r.FormValue("firstname"), " ")
+			lastnameInput := strings.Trim(r.FormValue("lastname"), " ")
 
 			if validInput.MatchString(firstnameInput) && validInput.MatchString(lastnameInput) {
 				person := entity.Person{
@@ -66,9 +66,9 @@ func main() {
 
 	http.HandleFunc("/person/edit", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			firstnameInput := r.FormValue("firstname")
-			lastnameInput := r.FormValue("lastname")
-			objID, err := primitive.ObjectIDFromHex(r.FormValue("id"))
+			firstnameInput := strings.Trim(r.FormValue("firstname"), " ")
+			lastnameInput := strings.Trim(r.FormValue("lastname"), " ")
+			objID, err := primitive.ObjectIDFromHex(strings.Trim(r.FormValue("id"), " "))
 
 			if validInput.MatchString(firstnameInput) && validInput.MatchString(lastnameInput) && err == nil {
 				person := entity.Person{
