@@ -18,8 +18,8 @@ const databaseName = "test"
 const serverURI = "mongodb://localhost:27017"
 
 func main() {
-	formTmlp := template.Must(template.ParseFiles(filepath.Join("views", "form.html")))
-	listTmpl := template.Must(template.ParseFiles(filepath.Join("views", "list.html")))
+	formTmlp := template.Must(template.ParseFiles(filepath.Join("views", "form.tmpl"), filepath.Join("views", "layout.tmpl")))
+	listTmpl := template.Must(template.ParseFiles(filepath.Join("views", "list.tmpl"), filepath.Join("views", "layout.tmpl")))
 	var validInput = regexp.MustCompile(`^[a-zA-ZàâæçéèêëîïôœùûüÿÀÂÆÇnÉÈÊËÎÏÔŒÙÛÜŸ\-\s]+$`)
 
 	dbClient := mongodb.New(serverURI, databaseName)
@@ -45,7 +45,7 @@ func main() {
 		if err != nil {
 			log.Fatal(fmt.Sprintf("Failed to get all persons : %v", err))
 		}
-		listTmpl.Execute(w, struct{ Persons []entity.Person }{persons})
+		listTmpl.ExecuteTemplate(w, "layout", struct{ Persons []entity.Person }{persons})
 	})
 
 	http.HandleFunc("/person/add", func(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +56,7 @@ func main() {
 			false,
 			"/",
 		}
-		formTmlp.Execute(w, params)
+		formTmlp.ExecuteTemplate(w, "layout", params)
 	})
 
 	http.HandleFunc("/person/delete/", func(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +95,7 @@ func main() {
 			person,
 			"/person/edit",
 		}
-		formTmlp.Execute(w, params)
+		formTmlp.ExecuteTemplate(w, "layout", params)
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", nil))

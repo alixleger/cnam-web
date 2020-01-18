@@ -1,0 +1,37 @@
+{{define "style"}}
+h1 {
+    font-family: "Roboto", sans serif;
+    font-weight: 300;
+}
+{{end}}
+
+{{define "content"}}
+    <h1 class="center-align">MongoDB Person entities</h1>
+    <table class="centered highlight">
+        <thead>
+        <tr>
+            <th>Prénom</th>
+            <th>Nom</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .Persons}}
+            <tr>
+                <td>{{.Firstname}}</td>
+                <td>{{.Lastname}}</td>
+                <td>
+                    <a href="/person/{{.ID.Hex}}" class="btn-floating btn-large waves-effect waves-light green">
+                        <i class="material-icons">edit</i>
+                    </a>
+                    <a href="/person/delete/{{.ID.Hex}}" class="btn-floating btn-large waves-effect waves-light green">
+                        <i class="material-icons">delete</i>
+                    </a>
+                </td>
+            </tr>
+        {{end}}
+        </tbody>
+    </table>
+    <br>
+    <a href="/person/add" class="btn-floating btn-large waves-effect waves-light green"><i class="material-icons">add</i></a>
+{{end}}
