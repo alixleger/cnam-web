@@ -1,0 +1,144 @@
+{{define "content"}}
+    <div class="row">
+        <div class="col s12">
+            <h1 class="center-align">MongoDB Person entities</h1>
+            <h2>API Client</h2>
+            <table class="centered highlight">
+                <thead>
+                <tr>
+                    <th>Prénom</th>
+                    <th>Nom</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div class="col s12">
+            <div class="container">
+                <h2 class="center-align">Ajout</h2>
+                <div class="row">
+                    <form id="form" action="javascript: insertPerson();" class="col s12">
+                        <div class="row">
+                            <div class="input-field col s6">
+                                <input id="firstname" name="firstname" type="text" required pattern="[a-zA-ZàâæçéèêëîïôœùûüÿÀÂÆÇnÉÈÊËÎÏÔŒÙÛÜŸ\-\s]+" class="validate">
+                                <label for="firstname">Prénom</label>
+                            </div>
+                            <div class="input-field col s6">
+                                <input id="lastname" name="lastname" type="text" required pattern="[a-zA-ZàâæçéèêëîïôœùûüÿÀÂÆÇnÉÈÊËÎÏÔŒÙÛÜŸ\-\s]+" class="validate">
+                                <label for="lastname">Nom</label>
+                            </div>
+                            <div class="col s12">
+                                <button class="btn waves-effect waves-light" type="submit" name="action">Ajouter<i class="material-icons right">send</i></button>
+                            </div>
+                        </div>
+                    </form> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const api_url = "http://localhost:1234/rpc";
+        let bodyContent = {
+            "method": null,
+            "params": [],
+            "id":0,
+            "jsonrpc":"2.0"
+        };
+
+        const sendApiRequest = (bodyContent, responseHandler) => {
+            fetch(api_url, {method: "POST", headers: {'Content-Type': 'application/json'}, body: JSON.stringify(bodyContent)}).then(function(response) {
+                const contentType = response.headers.get("content-type");
+                if(contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json().then(responseHandler);
+                }
+                console.log("No JSON found in response.");
+            });
+        };
+
+        const updatePersonsList = () => {
+            bodyContent.method = "Persons.GetPersons";
+            bodyContent.params = [];
+            sendApiRequest(bodyContent, setPersonsList);
+        };
+
+        const updatePerson = (person) => {
+            console.log('Update person ' + person._id);
+            bodyContent.method = "Persons.UpdatePerson";
+            bodyContent.params = [person];
+            sendApiRequest(bodyContent, null);
+            updatePersonsList();
+        };
+
+        const deletePerson = (person) => {
+            console.log('Delete person ' + person._id);
+            bodyContent.method = "Persons.DeletePerson";
+            bodyContent.params = [person._id];
+            sendApiRequest(bodyContent, null);
+            updatePersonsList();
+        };
+
+        const insertPerson = () => {
+            console.log('Create new person');
+            bodyContent.method = "Persons.InsertPerson";
+            bodyContent.params = [{
+                'ID': null,
+                'firstname': document.getElementById('firstname').value,
+                'lastname': document.getElementById('lastname').value
+            }];
+            sendApiRequest(bodyContent, null);
+            updatePersonsList();
+        };
+
+        const setPersonsList = (jsonResponse) => {
+            if (jsonResponse.error != null) {
+                console.log(jsonResponse.error);
+                return;
+            }
+            const persons = jsonResponse.result;
+            let tbody = document.querySelector('tbody');
+            tbody.innerHTML = "";
+            persons.forEach(person => {
+                let tr = document.createElement('tr');
+
+                let firstname = document.createElement('td');
+                firstname.appendChild(document.createTextNode(person.firstname));
+
+                let lastname = document.createElement('td');
+                lastname.appendChild(document.createTextNode(person.lastname));
+
+                let action = document.createElement('td');
+
+                let editLink = document.createElement('button');
+                editLink.onclick = () => updatePerson(person);
+                editLink.setAttribute('class', 'btn-floating btn-large waves-effect waves-light green');
+                let editIcon = document.createElement('i');
+                editIcon.setAttribute('class', 'material-icons');
+                editIcon.appendChild(document.createTextNode('edit'));
+                editLink.appendChild(editIcon);
+
+                let deleteLink = document.createElement('button');
+                deleteLink.onclick = () => deletePerson(person);
+                deleteLink.setAttribute('href', '/person/delete/' + person._id);
+                deleteLink.setAttribute('class', 'btn-floating btn-large waves-effect waves-light green');
+                let deleteIcon = document.createElement('i');
+                deleteIcon.setAttribute('class', 'material-icons');
+                deleteIcon.appendChild(document.createTextNode('delete'));
+                deleteLink.appendChild(deleteIcon);
+
+                action.appendChild(editLink);
+                action.appendChild(deleteLink);
+                tr.appendChild(firstname);
+                tr.appendChild(lastname);  
+                tr.appendChild(action);  
+                tbody.appendChild(tr);
+            });
+
+        };
+
+        updatePersonsList();
+
+    </script>
+{{end}}
