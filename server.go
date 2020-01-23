@@ -42,6 +42,7 @@ func main() {
 		s.RegisterService(&persons, "")
 
 		router.Handle("/rpc", s)
+		fmt.Println("json-rpc api listening at: localhost:1234/rpc")
 		log.Fatal(http.ListenAndServe(":1234", c.Handler(router)))
 	}()
 
@@ -71,5 +72,6 @@ func main() {
 
 	router.HandleFunc("/client", routerHandlers.APIClientHandler)
 
+	fmt.Println("app listening at: localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
